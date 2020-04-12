@@ -20,12 +20,15 @@ class MyConfig {
         val KM_V_DOWN = "vdown"
         val KM_V_MUTE = "vmute"
 
+        val KM_M_L_CLICK = "lclick"
+        val KM_M_R_CLICK = "rclick"
+
         val KM_M_L_UP = "lup"
         val KM_M_L_DOWN = "ldown"
-        val KM_M_L_CLICK = "lclick"
         val KM_M_R_UP = "rup"
         val KM_M_R_DOWN = "rdown"
-        val KM_M_R_CLICK = "rclick"
+
+        val KM_MIN_DISTANCE = 5
 
         val KM_TYPE_NONE = 0
         val KM_TYPE_BACKSPACE = 1

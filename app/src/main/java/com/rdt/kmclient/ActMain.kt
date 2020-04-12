@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.preference.PreferenceManager
@@ -23,7 +24,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
     lateinit var m_ip: String
     lateinit var m_sock: Socket
     lateinit var m_sender: Formatter
-    val m_client: ExecutorService = Executors.newCachedThreadPool()
+    var m_client: ExecutorService = Executors.newCachedThreadPool()
 
     //
     // LIFECYCLE
@@ -48,7 +49,10 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
 
         m_shared_pref = PreferenceManager.getDefaultSharedPreferences(this)
         m_ip = m_shared_pref.getString("ip_addr", "").toString()
-        run_client()
+        m_client = Executors.newCachedThreadPool()
+
+        //run_client()
+        v_3.setOnClickListener(this)
     }
 
     override fun onResume() {
@@ -99,6 +103,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
             R.id.v_right -> { send(MyConfig.KM_K_RIGHT) }
             R.id.v_left_click  -> { send(MyConfig.KM_M_L_CLICK) }
             R.id.v_right_click -> { send(MyConfig.KM_M_R_CLICK) }
+            R.id.v_3 -> { run_client() }
             else -> {}
         }
     }
@@ -117,13 +122,19 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                 try {
                     m_ip = m_shared_pref.getString("ip_addr", "").toString()
                     if (m_ip == "") {
-                        //
+                        Log.d("tag", "----iiii----")
                     }
-                    m_sock = Socket(m_ip, MyConfig.KM_PORT)
+                    Log.d("tag", String.format("---- ip = %s ----", m_ip))
+                    //m_sock = Socket(m_ip, MyConfig.KM_PORT)
+                    m_sock = Socket("192.168.0.9", 9999)
+                    Log.d("tag", "----jjjj----")
                     m_sender = Formatter(m_sock.getOutputStream())
+                    Log.d("tag", "----kkkk----")
                     m_sender.flush()
+                    Log.d("tag", "----llll----")
                     try {
                         send(MyConfig.KM_JOIN)
+                        Log.d("tag", "----mmmm----")
                         runOnUiThread(Runnable {
                             Toast.makeText(baseContext, "connected", Toast.LENGTH_LONG).show()
                         })
@@ -131,7 +142,11 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                     }
                     catch (e: NullPointerException) {}
                 }
-                catch (e: IOException) {}
+                catch (e: IOException) {
+                    Log.d("tag", "----eeee----")
+                    //Toast.makeText(this, "connection failed", Toast.LENGTH_LONG).show()
+                    //finish()
+                }
             }
         }
     }
@@ -154,6 +169,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         var upy = 0.0f
         var px = 0.0f
         var py = 0.0f
+        var incr = 0
 
         override fun onTouch(v: View?, event: MotionEvent?): Boolean {
             when (event?.action) {
@@ -161,14 +177,41 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                     dnx = event.x
                     dny = event.y
                 }
+
                 MotionEvent.ACTION_UP -> {
                     upx = event.x
                     upy = event.y
+                    incr = 0
                     val dx = dnx - upx
+                    val dy = dny - upy
+                    if (Math.abs(dx) > MyConfig.KM_MIN_DISTANCE) {
+                        if (dx < 0) { /* left to right swipe */ }
+                        if (dx > 0) { /* right to left swipe */ }
+                    }
+                    if (Math.abs(dy) > MyConfig.KM_MIN_DISTANCE) {
+                        if (dy < 0) { /* top to bottom swipe */ }
+                        if (dy > 0) { /* bottom to top swipe */ }
+                    }
+                    //send(MyConfig.KM_M_L_CLICK)
                 }
+
                 MotionEvent.ACTION_MOVE -> {
-                    val xy = String.format("%s,%s,", event.x)
+                    if (incr == 0) {
+                        px = event.x
+                        py = event.y
+                        incr += 1
+                    } else if (incr == 1) {
+                        val xy = String.format(
+                            "%s,%s,",
+                            ((event.x - px).toInt()).toString(),
+                            ((event.y - py).toInt()).toString()
+                        )
+                        send(xy)
+                        px = event.x
+                        py = event.y
+                    }
                 }
+
                 else -> {}
             }
             return true
