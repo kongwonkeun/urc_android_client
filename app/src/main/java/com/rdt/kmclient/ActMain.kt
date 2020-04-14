@@ -51,8 +51,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         m_ip = m_shared_pref.getString("ip_addr", "").toString()
         m_client = Executors.newCachedThreadPool()
 
-        //run_client()
-        v_3.setOnClickListener(this)
+        run_client()
     }
 
     override fun onResume() {
@@ -103,11 +102,13 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
             R.id.v_right -> { send(MyConfig.KM_K_RIGHT) }
             R.id.v_left_click  -> { send(MyConfig.KM_M_L_CLICK) }
             R.id.v_right_click -> { send(MyConfig.KM_M_R_CLICK) }
-            R.id.v_3 -> { run_client() }
             else -> {}
         }
     }
 
+    override fun onBackPressed() {
+        finish()
+    }
 
     //
     //
@@ -122,19 +123,13 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                 try {
                     m_ip = m_shared_pref.getString("ip_addr", "").toString()
                     if (m_ip == "") {
-                        Log.d("tag", "----iiii----")
                     }
                     Log.d("tag", String.format("---- ip = %s ----", m_ip))
-                    //m_sock = Socket(m_ip, MyConfig.KM_PORT)
-                    m_sock = Socket("192.168.0.9", 9999)
-                    Log.d("tag", "----jjjj----")
+                    m_sock = Socket(m_ip, MyConfig.KM_PORT)
                     m_sender = Formatter(m_sock.getOutputStream())
-                    Log.d("tag", "----kkkk----")
                     m_sender.flush()
-                    Log.d("tag", "----llll----")
                     try {
                         send(MyConfig.KM_JOIN)
-                        Log.d("tag", "----mmmm----")
                         runOnUiThread(Runnable {
                             Toast.makeText(baseContext, "connected", Toast.LENGTH_LONG).show()
                         })
@@ -143,9 +138,6 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                     catch (e: NullPointerException) {}
                 }
                 catch (e: IOException) {
-                    Log.d("tag", "----eeee----")
-                    //Toast.makeText(this, "connection failed", Toast.LENGTH_LONG).show()
-                    //finish()
                 }
             }
         }
@@ -222,6 +214,9 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
             if (keyCode == KeyEvent.KEYCODE_ENTER && event?.action == KeyEvent.ACTION_DOWN) {
                 send(MyConfig.KM_K_ENTER)
+            }
+            if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_UP) {
+                onBackPressed()
             }
             return true
         }

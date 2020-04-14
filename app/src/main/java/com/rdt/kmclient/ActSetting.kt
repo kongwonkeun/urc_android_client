@@ -10,7 +10,6 @@ class ActSetting : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setting)
 
-        Log.d("tag", "----AAAA----")
         supportFragmentManager.beginTransaction().replace(R.id.v_frag, FragSetting()).commit()
     }
 

@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="volume down" />
+            android:text="vol-down" />
 
         <Button
             android:id="@+id/v_vol_mute"
@@ -32,7 +32,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="volume up" />
+            android:text="vol-up" />
     </LinearLayout>
 
     <LinearLayout
@@ -94,8 +94,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="4"
-        android:text="TextView"
-        android:textAlignment="viewStart" />
+        android:gravity="center"
+        android:text="touch pad" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -132,7 +132,7 @@
         android:layout_weight="1"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Name"
+        android:text=""
         android:textAlignment="viewStart" />
 
 </LinearLayout>
