@@ -114,7 +114,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="-" />
+            android:text="KO-EN" />
 
         <Button
             android:id="@+id/v_right_click"
@@ -129,10 +129,10 @@
         android:id="@+id/v_keyboard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:layout_weight="1"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text=""
-        android:textAlignment="viewStart" />
+        android:text=""/>
 
 </LinearLayout>

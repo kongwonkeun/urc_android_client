@@ -42,6 +42,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         v_right.setOnClickListener(this)
         v_left_click.setOnClickListener(this)
         v_right_click.setOnClickListener(this)
+        v_3.setOnClickListener(this)
 
         v_touch_pad.setOnTouchListener(MyTouch())
         v_keyboard.setOnKeyListener(MyKey())
@@ -102,6 +103,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
             R.id.v_right -> { send(MyConfig.KM_K_RIGHT) }
             R.id.v_left_click  -> { send(MyConfig.KM_M_L_CLICK) }
             R.id.v_right_click -> { send(MyConfig.KM_M_R_CLICK) }
+            R.id.v_3 -> { send(MyConfig.KM_K_HAN_ENG) }
             else -> {}
         }
     }
@@ -214,11 +216,14 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
             if (keyCode == KeyEvent.KEYCODE_ENTER && event?.action == KeyEvent.ACTION_DOWN) {
                 send(MyConfig.KM_K_ENTER)
+                v_keyboard.setText("")
+                return true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_UP) {
                 onBackPressed()
+                return true
             }
-            return true
+            return false
         }
     }
 
@@ -231,13 +236,40 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         }
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
             curr = s.toString()
-            val action = MyUtil.detect_key_action(prev, curr)
-            if (action == MyConfig.KM_TYPE_BACKSPACE) {
+
+            Log.d("tag", String.format("----iiii----"))
+            if (prev.startsWith(curr) && (prev.length - curr.length) == 1) { // BS
                 send(MyConfig.KM_K_BS)
+                return
             }
-            if (action == MyConfig.KM_TYPE_KEY) {
-                val key = s?.subSequence(s.length - 1, s.length).toString()
-                send(MyConfig.KM_K_ADD + key)
+
+            if (curr.startsWith(prev) && (curr.length - prev.length) == 1) {
+                if (curr[curr.length - 1].toInt() < 0xAC00) {
+                    // english code or hangul code (1st)
+                    val key = s?.subSequence(s.length - 1, s.length).toString()
+                    Log.d("tag", String.format("----1st=%s----", key))
+                    send(MyConfig.KM_K_ADD + key)
+                    return
+                }
+            }
+
+            val n = curr.length - prev.length
+            if (n < 0 || (n == 0 && curr.length == 0)) { // ENTER
+                return
+            }
+
+            // hangul code (2nd, 3rd)
+            val han = curr[curr.length - 1].toInt()
+            val trd = (((han - 0xAC00) % 28))
+            val snd = (((han - 0xAC00 - trd) / 28) % 21)
+            val fst = (((han - 0xAC00 - trd) / 28) - snd) / 21
+
+            if (trd != 0) {
+                Log.d("tag", String.format("----3rd----"))
+                send(MyConfig.KM_K_ADD + MyConfig.KM_3RD[trd])
+            } else {
+                Log.d("tag", String.format("----2nd----"))
+                send(MyConfig.KM_K_ADD + MyConfig.KM_2ND[snd])
             }
         }
         override fun afterTextChanged(s: Editable?) {
