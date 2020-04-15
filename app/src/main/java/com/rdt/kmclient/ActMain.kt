@@ -146,11 +146,13 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
     }
 
     fun send(message: String) {
-        try {
-            m_sender.format(message)
-            m_sender.flush()
+        m_client.execute {
+            try {
+                m_sender.format(message)
+                m_sender.flush()
+            } catch (e: NullPointerException) {
+            }
         }
-        catch (e: NullPointerException) {}
     }
 
     //
