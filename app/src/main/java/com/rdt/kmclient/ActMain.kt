@@ -126,7 +126,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
                     m_ip = m_shared_pref.getString("ip_addr", "").toString()
                     if (m_ip == "") {
                     }
-                    Log.d("tag", String.format("---- ip = %s ----", m_ip))
+                    Log.d("tag", String.format("----ip=%s----", m_ip))
                     m_sock = Socket(m_ip, MyConfig.KM_PORT)
                     m_sender = Formatter(m_sock.getOutputStream())
                     m_sender.flush()
@@ -216,7 +216,7 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
             if (keyCode == KeyEvent.KEYCODE_ENTER && event?.action == KeyEvent.ACTION_DOWN) {
                 send(MyConfig.KM_K_ENTER)
-                v_keyboard.setText("")
+                v_keyboard.setText("") // ENTER clear the text
                 return true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event?.action == KeyEvent.ACTION_UP) {
@@ -230,6 +230,8 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
     inner class MyTextWatcher : TextWatcher {
         lateinit var prev: String
         lateinit var curr: String
+        var prev_han = 0
+        var prev_len = 0
 
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             prev = s.toString()
@@ -237,38 +239,58 @@ class ActMain : AppCompatActivity(), View.OnClickListener {
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
             curr = s.toString()
 
-            Log.d("tag", String.format("----iiii----"))
-            if (prev.startsWith(curr) && (prev.length - curr.length) == 1) { // BS
+            var num = 0
+            val len = curr.length - prev.length
+
+            if (curr.length > 0) {
+                num = curr[curr.length - 1].toInt()
+            }
+
+            // BACKSPACE
+            if (/*prev.startsWith(curr) &&*/ len == -1) {
                 send(MyConfig.KM_K_BS)
+                prev_han = num
                 return
             }
 
-            if (curr.startsWith(prev) && (curr.length - prev.length) == 1) {
-                if (curr[curr.length - 1].toInt() < 0xAC00) {
-                    // english code or hangul code (1st)
+            // ENTER
+            if (len < 0 || (len == 0 && curr.length == 0)) {
+                prev_han = 0
+                return
+            }
+
+            // a char added
+            if (curr.startsWith(prev) && len == 1) {
+                // english or hangul key code
+                if (num < 0xAC00) {
                     val key = s?.subSequence(s.length - 1, s.length).toString()
-                    Log.d("tag", String.format("----1st=%s----", key))
                     send(MyConfig.KM_K_ADD + key)
+                    prev_han = 0
                     return
+                }
+                else { // num >= 0xAC00
+                    // len == 1
                 }
             }
 
-            val n = curr.length - prev.length
-            if (n < 0 || (n == 0 && curr.length == 0)) { // ENTER
+            // len == 0 --> the add and del of hangul syllables does not make a difference of length
+            // hangul unicode
+            val han = num
+            if (len == 0 && han < prev_han) {
+                send(MyConfig.KM_K_BS)
+                prev_han = han
                 return
             }
+            prev_han = han
 
-            // hangul code (2nd, 3rd)
-            val han = curr[curr.length - 1].toInt()
+            // hangul syllables unicode (1st, 2nd, 3rd)
             val trd = (((han - 0xAC00) % 28))
             val snd = (((han - 0xAC00 - trd) / 28) % 21)
             val fst = (((han - 0xAC00 - trd) / 28) - snd) / 21
 
             if (trd != 0) {
-                Log.d("tag", String.format("----3rd----"))
                 send(MyConfig.KM_K_ADD + MyConfig.KM_3RD[trd])
             } else {
-                Log.d("tag", String.format("----2nd----"))
                 send(MyConfig.KM_K_ADD + MyConfig.KM_2ND[snd])
             }
         }
